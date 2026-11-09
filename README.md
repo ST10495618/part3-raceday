@@ -1,4 +1,4 @@
-# part3-raceday
+
 # RaceDay – Race Management Platform
 
 ## About the Project
