@@ -1,4 +1,4 @@
-part3 poe
+POE PART 3
 # RaceDay – Race Management Platform
 
 ## About the Project
