@@ -1,5 +1,5 @@
 POE PART 3
-# RaceDay – Race Management Platform
+
 
 ## About the Project
 final part of the project
