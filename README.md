@@ -5,9 +5,7 @@ POE PART 3
 final part of the project
 RaceDay is a web-based race management platform developed using ASP.NET Core 8. The system allows participants to discover running events, register for races and view their race information. Organisers can manage events, monitor registrations and manage race results.
 
-The project demonstrates the use of web APIs, MVC architecture, database integration, authentication, cloud storage and containerisation.
-
-
+The project demonstrates the use of web APIs, MVC architecture, database integration, authentication, cloud storage and containerisation
 ## Main Features
 ### Participant Features
 - Register and log in securely.
@@ -33,7 +31,7 @@ The project demonstrates the use of web APIs, MVC architecture, database integra
 - Secure configuration using Visual Studio User Secrets.
 
 
-
+## Technologies Used
 | Technology | Purpose |
 |---|---|
 | C# | Main programming language |
