@@ -1,167 +1,247 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using RaceDayMVC.Models.ViewModels;
-using System.Net.Http.Json;
-using System.Text.Json;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using RaceDay.Data;
+using RaceDay.Models;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using RaceDay.DTOs;
 
-
-namespace RaceDayMVC.Controllers
+namespace RaceDay.Controllers
 {
+    [ApiController]
+    [Route("api/auth")]
     public class AuthController : Controller
     {
-        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly RaceDayContext _context;
+        private readonly IConfiguration _configuration;
+        private readonly PasswordHasher<User> _passwordHasher = new();
 
-        public AuthController(IHttpClientFactory httpClientFactory)
+        public AuthController(
+            RaceDayContext context,
+            IConfiguration configuration)
         {
-            _httpClientFactory = httpClientFactory;
+            _context = context;
+            _configuration = configuration;
         }
 
-        // GET: Login
-        [HttpGet]
-        public IActionResult Login()
-        {
-            return View();
-        }
-
-        // POST: Login
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(LoginViewModel model)
+        [AllowAnonymous]
+        [HttpPost("register")]
+        public async Task<IActionResult> Register(
+            [FromBody] RegisterRequest request)
         {
             if (!ModelState.IsValid)
-                return View(model);
+                return BadRequest(ModelState);
 
-            var client = _httpClientFactory.CreateClient("RaceDayAPI");
+            string email = request.Email.Trim().ToLowerInvariant();
 
-            var response = await client.PostAsJsonAsync(
-                "api/auth/login", model);
+            bool emailExists = await _context.Users
+                .AnyAsync(u => u.Email == email);
 
-            if (!response.IsSuccessStatusCode)
+            if (emailExists)
             {
-                ModelState.AddModelError(string.Empty,
-                    "Invalid email or password. Please try again.");
-
-                return View(model);
-            }
-
-            var json = await response.Content.ReadAsStringAsync();
-
-            using var document = JsonDocument.Parse(json);
-            var root = document.RootElement;
-
-            string token = root.GetProperty("token").GetString() ?? "";
-
-            if (string.IsNullOrWhiteSpace(token))
-            {
-                ModelState.AddModelError(string.Empty,
-                    "The API did not return an authentication token.");
-
-                return View(model);
-            }
-
-            var user = root.GetProperty("user");
-
-            string firstName = user.TryGetProperty("firstName", out var first)
-                ? first.GetString() ?? ""
-                : "";
-
-            string email = user.TryGetProperty("email", out var emailValue)
-                ? emailValue.GetString() ?? model.Email
-                : model.Email;
-
-            int userId = user.TryGetProperty("userID", out var idValue)
-                ? idValue.GetInt32()
-                : 0;
-
-            string role = "Participant";
-
-            if (user.TryGetProperty("roles", out var roles) &&
-                roles.ValueKind == JsonValueKind.Array)
-            {
-                foreach (var item in roles.EnumerateArray())
+                return BadRequest(new
                 {
-                    string currentRole = item.GetString() ?? "";
-
-                    if (currentRole == "Organiser")
-                    {
-                        role = "Organiser";
-                        break;
-                    }
-
-                    if (currentRole == "Participant")
-                        role = "Participant";
-                }
+                    message = "This email address is already registered."
+                });
             }
 
-            HttpContext.Session.SetString("JWToken", token);
-            HttpContext.Session.SetString("UserRole", role);
-            HttpContext.Session.SetString("UserEmail", email);
-            HttpContext.Session.SetString("FirstName", firstName);
-            HttpContext.Session.SetInt32("UserID", userId);
+            string roleName = request.Role.Trim();
 
-            if (role == "Organiser")
-                return RedirectToAction("Dashboard", "Organiser");
-
-            return RedirectToAction("Dashboard", "Participant");
-        }
-
-        // GET: Register
-        [HttpGet]
-        public IActionResult Register()
-        {
-            return View();
-        }
-
-        // POST: Register
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Register(RegisterViewModel model)
-        {
-            if (!ModelState.IsValid)
-                return View(model);
-
-            if (model.Role != "Participant" && model.Role != "Organiser")
+            if (roleName.Equals(
+                "Participant",
+                StringComparison.OrdinalIgnoreCase))
             {
-                ModelState.AddModelError("Role", "Select a valid role.");
-                return View(model);
+                roleName = "Participant";
+            }
+            else if (roleName.Equals(
+                "Organiser",
+                StringComparison.OrdinalIgnoreCase))
+            {
+                roleName = "Organiser";
+            }
+            else
+            {
+                return BadRequest(new
+                {
+                    message = "Role must be Participant or Organiser."
+                });
             }
 
-            var client = _httpClientFactory.CreateClient("RaceDayAPI");
+            var role = await _context.Roles
+                .FirstOrDefaultAsync(r => r.RoleName == roleName);
 
-            var registrationData = new
+            if (role == null)
             {
-                firstName = model.FirstName,
-                lastName = model.LastName,
-                email = model.Email,
-                password = model.Password,
-                phone = model.Phone,
-                role = model.Role
+                return StatusCode(500, new
+                {
+                    message = "The requested role was not found in the database."
+                });
+            }
+
+            var user = new User
+            {
+                FirstName = request.FirstName.Trim(),
+                LastName = request.LastName.Trim(),
+                Email = email,
+                Phone = request.Phone,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
             };
 
-            var response = await client.PostAsJsonAsync(
-                "api/auth/register", registrationData);
+            user.PasswordHash = _passwordHasher.HashPassword(
+                user,
+                request.Password);
 
-            if (!response.IsSuccessStatusCode)
+            // Save the user and their role in one transaction.
+            await using var transaction =
+                await _context.Database.BeginTransactionAsync();
+
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+
+            var userRole = new UserRole
             {
-                string error = await response.Content.ReadAsStringAsync();
+                UserID = user.UserID,
+                RoleID = role.RoleID
+            };
 
-                ModelState.AddModelError(string.Empty,
-                    "Registration failed. " + error);
+            _context.UserRoles.Add(userRole);
+            await _context.SaveChangesAsync();
 
-                return View(model);
-            }
+            await transaction.CommitAsync();
 
-            TempData["Success"] =
-                "Registration successful! You can now log in.";
-
-            return RedirectToAction("Login");
+            return Ok(new
+            {
+                message = "Registration successful.",
+                userId = user.UserID,
+                email = user.Email,
+                role = role.RoleName
+            });
         }
 
-        // Logout
-        public IActionResult Logout()
+        [AllowAnonymous]
+        [HttpPost("login")]
+        public async Task<IActionResult> Login(
+            [FromBody] LoginRequest request)
         {
-            HttpContext.Session.Clear();
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-            return RedirectToAction("Login");
+            string email = request.Email.Trim().ToLowerInvariant();
+
+            var user = await _context.Users
+                .Include(u => u.UserRoles)
+                    .ThenInclude(ur => ur.Role)
+                .FirstOrDefaultAsync(u => u.Email == email);
+
+
+            if (user == null ||
+                !user.IsActive ||
+                string.IsNullOrWhiteSpace(user.PasswordHash))
+            {
+                return Unauthorized(new
+                {
+                    message = "Invalid email or password."
+                });
+            }
+
+
+            var passwordResult =
+                _passwordHasher.VerifyHashedPassword(
+                    user,
+                    user.PasswordHash,
+                    request.Password);
+
+            if (passwordResult ==
+                PasswordVerificationResult.Failed)
+            {
+                return Unauthorized(new
+                {
+                    message = "Invalid email or password."
+                });
+            }
+
+            var claims = new List<Claim>
+            {
+                new Claim(
+                    ClaimTypes.NameIdentifier,
+                    user.UserID.ToString()),
+
+                new Claim(
+                    ClaimTypes.Name,
+                    user.FirstName),
+
+                new Claim(
+                    ClaimTypes.Email,
+                    user.Email)
+            };
+
+            foreach (var userRole in user.UserRoles)
+            {
+                claims.Add(new Claim(
+                    ClaimTypes.Role,
+                    userRole.Role.RoleName));
+            }
+
+            string? key = _configuration["Jwt:Key"];
+            string? issuer = _configuration["Jwt:Issuer"];
+            string? audience = _configuration["Jwt:Audience"];
+
+            if (string.IsNullOrWhiteSpace(key) ||
+                string.IsNullOrWhiteSpace(issuer) ||
+                string.IsNullOrWhiteSpace(audience))
+            {
+                return StatusCode(500, new
+                {
+                    message = "JWT configuration is missing."
+                });
+            }
+
+            if (Encoding.UTF8.GetByteCount(key) < 32)
+            {
+                return StatusCode(500, new
+                {
+                    message = "The JWT signing key must be at least 32 bytes."
+                });
+            }
+
+            var signingKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(key));
+
+            var credentials = new SigningCredentials(
+                signingKey,
+                SecurityAlgorithms.HmacSha256);
+
+            var token = new JwtSecurityToken(
+                issuer: issuer,
+                audience: audience,
+                claims: claims,
+                expires: DateTime.UtcNow.AddHours(1),
+                signingCredentials: credentials);
+
+            string tokenString =
+                new JwtSecurityTokenHandler().WriteToken(token);
+
+            return Ok(new
+            {
+                message = "Login successful.",
+                token = tokenString,
+                expiresAt = token.ValidTo,
+                user = new
+                {
+                    user.UserID,
+                    user.FirstName,
+                    user.LastName,
+                    user.Email,
+                    roles = user.UserRoles
+                        .Select(ur => ur.Role.RoleName)
+                        .ToList()
+                }
+            });
         }
     }
 }
