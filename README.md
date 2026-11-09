@@ -1,6 +1,6 @@
 POE PART 3
 
-
+# RaceDay – Race Management Platform
 ## About the Project
 final part of the project
 RaceDay is a web-based race management platform developed using ASP.NET Core 8. The system allows participants to discover running events, register for races and view their race information. Organisers can manage events, monitor registrations and manage race results.
