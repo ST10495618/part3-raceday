@@ -8,7 +8,7 @@ RaceDay is a web-based race management platform developed using ASP.NET Core 8. 
 The project demonstrates the use of web APIs, MVC architecture, database integration, authentication, cloud storage and containerisation.
 
 
-
+## Main Features
 ### Participant Features
 - Register and log in securely.
 - Browse available running events.
@@ -32,7 +32,7 @@ The project demonstrates the use of web APIs, MVC architecture, database integra
 - Protected API endpoints.
 - Secure configuration using Visual Studio User Secrets.
 
-## Technologies Used
+
 
 | Technology | Purpose |
 |---|---|
