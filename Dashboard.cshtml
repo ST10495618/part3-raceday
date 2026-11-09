@@ -1,0 +1,147 @@
+﻿@model List<RaceDayMVC.Models.ViewModels.EventViewModel>
+
+@{
+    ViewData["Title"] = "Participant Dashboard";
+}
+
+<div class="container mt-5">
+
+    <h2>Welcome, @ViewBag.FirstName!</h2>
+
+    <p>Welcome to your RaceDay Participant Dashboard.</p>
+
+    <hr />
+
+    <h3 class="mb-4">Upcoming Events</h3>
+
+    @if (ViewBag.Error != null)
+    {
+        <div class="alert alert-danger">
+            @ViewBag.Error
+        </div>
+    }
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="row">
+
+            @foreach (var raceEvent in Model)
+            {
+                <div class="col-md-4 mb-4">
+
+                    <div class="card shadow h-100">
+
+                        <div class="card-body">
+
+                            <span class="badge bg-success">
+                                @raceEvent.Status
+                            </span>
+
+                            <h5 class="card-title mt-3">
+                                @raceEvent.Name
+                            </h5>
+
+                            <p class="card-text">
+                                @raceEvent.Description
+                            </p>
+
+                            <p>
+                                <strong>Date:</strong>
+                                @raceEvent.EventDate.ToString("dd MMMM yyyy")
+                            </p>
+
+                            <p>
+                                <strong>Time:</strong>
+                                @raceEvent.EventTime
+                            </p>
+
+                            <p>
+                                <strong>Location:</strong>
+                                @raceEvent.Location
+                            </p>
+
+                            <p>
+                                <strong>Entry Fee:</strong>
+                                R @raceEvent.EntryFee.ToString("0.00")
+                            </p>
+
+                            <p>
+                                <strong>Maximum Participants:</strong>
+                                @raceEvent.MaxParticipants
+                            </p>
+
+                            <a asp-controller="Participant"
+                               asp-action="Details"
+                               asp-route-id="@raceEvent.EventID"
+                               class="btn btn-primary">
+                                View Details
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            }
+
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            No upcoming events are currently available.
+        </div>
+    }
+
+    <hr />
+
+    <h3 class="mt-4">My Activities</h3>
+
+    <div class="row mt-3">
+
+        <div class="col-md-4 mb-3">
+            <div class="card shadow p-3">
+                <h5>My Registrations</h5>
+                <p>View your registered events.</p>
+                
+                <a asp-controller="Participant"
+                   asp-action="MyRegistrations"
+                   class="btn btn-primary">
+                    My Registrations
+                </a>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card shadow p-3">
+                <h5>My Results</h5>
+                <p>View your race results.</p>
+                <a asp-controller="Participant"
+                   asp-action="MyResults"
+                   class="btn btn-primary">
+                    View Results
+                </a>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card shadow p-3">
+                <h5>My Profile</h5>
+                <p>Manage your personal information.</p>
+                <a asp-controller="Participant"
+                   asp-action="MyProfile"
+                   class="btn btn-primary">
+                    My Profile
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+    <a asp-controller="Auth"
+       asp-action="Logout"
+       class="btn btn-danger mt-3">
+        Logout
+    </a>
+
+</div>

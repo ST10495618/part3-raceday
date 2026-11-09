@@ -1,0 +1,126 @@
+﻿@model List<RaceDayMVC.Models.ViewModels.RegistrationViewModel>
+
+@{
+    ViewData["Title"] = "Manage Registrations";
+}
+
+<div class="container mt-5">
+
+    <h2>Manage Registrations</h2>
+
+    <p>View participants registered for your events.</p>
+
+    <hr />
+
+    @if (ViewBag.Error != null)
+    {
+        <div class="alert alert-danger">
+            @ViewBag.Error
+        </div>
+    }
+
+    <div class="row mb-4">
+
+        <div class="col-md-6">
+            <div class="card shadow-sm p-3">
+                <h5>Total Events</h5>
+                <h3>@ViewBag.TotalEvents</h3>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm p-3">
+                <h5>Total Registrations</h5>
+                <h3>@ViewBag.TotalRegistrations</h3>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="card shadow-sm p-3">
+
+        <h4 class="mb-3">Participant Registrations</h4>
+
+        @if (Model == null || !Model.Any())
+        {
+            <div class="alert alert-info">
+                No participants have registered for your events yet.
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+
+                <table class="table table-striped table-hover">
+
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Registration ID</th>
+                            <th>Participant Name</th>
+                            <th>Email Address</th>
+                            <th>Phone</th>
+                            <th>Event Name</th>
+                            <th>Registration Date</th>
+                            <th>Event Type</th>
+                            <th>Status</th>
+                            
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        @foreach (var registration in Model)
+                        {
+                            <tr>
+                                <td>@registration.RegistrationID</td>
+
+                                <td>
+                                    @(registration.ParticipantDetails == null
+                                                                ? "N/A"
+                                                                : registration.ParticipantDetails.FirstName + " " +
+                                                                registration.ParticipantDetails.LastName)
+                        </td>
+
+                                <td>
+                                    @(registration.ParticipantDetails?.Email ?? "N/A")
+                                </td>
+
+                                <td>
+                                    @(registration.ParticipantDetails?.Phone ?? "N/A")
+                                </td>
+
+                                <td>
+                                    @(registration.EventDetails?.Name ?? "N/A")
+                                </td>
+
+                                <td>
+                                    @registration.RegistrationDate.ToString("dd MMM yyyy")
+                                </td>
+                                <td>
+                                    @(registration.EventDetails?.EventType ?? "Uncategorised")
+                                </td>
+
+                                <td>
+                                    <span class="badge bg-success">
+                                        @registration.Status
+                                    </span>
+                                </td>
+                            </tr>
+                                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+        }
+
+        <a asp-controller="Organiser"
+           asp-action="ManageEvents"
+           class="btn btn-secondary mt-3">
+            Back to Manage Events
+        </a>
+
+    </div>
+
+</div>

@@ -1,0 +1,110 @@
+﻿@model List<RaceDayMVC.Models.ViewModels.ResultViewModel>
+
+@{
+    ViewData["Title"] = "My Results";
+}
+
+<div class="container mt-5">
+
+    <h2>My Race Results</h2>
+
+    <p>Welcome, @ViewBag.FirstName!</p>
+
+    <p>Here you can view your race positions and performance.</p>
+
+    <hr />
+
+    @if (ViewBag.Error != null)
+    {
+        <div class="alert alert-danger">
+            @ViewBag.Error
+        </div>
+    }
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="row">
+
+            @foreach (var result in Model)
+            {
+                <div class="col-md-6 mb-4">
+
+                    <div class="card shadow h-100">
+
+                        <div class="card-body">
+
+                            <h5 class="card-title">
+                                @result.EventName
+                            </h5>
+
+                            <hr />
+
+                            <p>
+                                <strong>Race Date:</strong>
+                                @(result.EventDate?.ToString("dd MMMM yyyy") ?? "Not available")
+                            </p>
+
+                            <p>
+                                <strong>Finishing Position:</strong>
+                                @(result.Position?.ToString() ?? "Not recorded")
+                            </p>
+
+                            <p>
+                                <strong>Starting Position:</strong>
+                                @(result.StartPosition?.ToString() ?? "Not recorded")
+                            </p>
+
+                            <p>
+                                <strong>Finish Time:</strong>
+
+                                @if (result.FinishTime.HasValue)
+                                {
+                                    @result.FinishTime.Value.ToString(@"hh\:mm\:ss")
+                                }
+                                else
+                                {
+                                    <span>Not recorded</span>
+                                }
+                            </p>
+
+                            <p>
+                                <strong>Pace:</strong>
+                                @(result.Pace?.ToString("0.00") ?? "Not recorded")
+                            </p>
+
+                            <p>
+                                <strong>Status:</strong>
+
+                                <span class="badge bg-success">
+                                    @result.Status
+                                </span>
+                            </p>
+
+                            <p>
+                                <strong>Recorded At:</strong>
+                                @result.RecordedAt.ToString("dd MMMM yyyy")
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            }
+
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            You do not have any race results available yet.
+        </div>
+    }
+
+    <a asp-controller="Participant"
+       asp-action="Dashboard"
+       class="btn btn-secondary mt-3">
+        Back to Dashboard
+    </a>
+
+</div>

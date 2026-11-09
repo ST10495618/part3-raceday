@@ -1,0 +1,91 @@
+﻿@model List<RaceDayMVC.Models.ViewModels.RaceResultViewModel>
+
+@{
+    ViewData["Title"] = "Manage Race Results";
+}
+
+<div class="container mt-5">
+
+    <h2>Manage Race Results</h2>
+    <p>View race results recorded for your events.</p>
+
+    <hr />
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["Error"]
+        </div>
+    }
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Success"]
+        </div>
+    }
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4>Recorded Results</h4>
+
+        <a asp-controller="Organiser"
+           asp-action="RecordResult"
+           class="btn btn-primary">
+            Record New Result
+        </a>
+    </div>
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="alert alert-info">
+            No race results have been recorded yet.
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+
+                <thead class="table-dark">
+                    <tr>
+                        <th>Result ID</th>
+                        <th>Participant</th>
+                        <th>Event</th>
+                        <th>Position</th>
+                        <th>Start Position</th>
+                        <th>Finish Time</th>
+                        <th>Pace</th>
+                        <th>Status</th>
+                        <th>Recorded At</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var result in Model)
+                    {
+                        <tr>
+                            <td>@result.ResultID</td>
+                            <td>@result.ParticipantName</td>
+                            <td>@result.EventName</td>
+                            <td>@(result.Position?.ToString() ?? "N/A")</td>
+                            <td>@(result.StartPosition?.ToString() ?? "N/A")</td>
+                            <td>@(result.FinishTime ?? "N/A")</td>
+                            <td>@(result.Pace?.ToString("0.00") ?? "N/A")</td>
+                            <td>@result.Status</td>
+                            <td>@result.RecordedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                        </tr>
+                    }
+                </tbody>
+
+            </table>
+        </div>
+    }
+
+    <a asp-controller="Organiser"
+       asp-action="Dashboard"
+       class="btn btn-secondary mt-3">
+        Back to Dashboard
+    </a>
+
+</div>
+

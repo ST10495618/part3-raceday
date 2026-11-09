@@ -1,0 +1,118 @@
+﻿@model RaceDayMVC.Models.ViewModels.EventViewModel
+
+@{
+    ViewData["Title"] = "Event Details";
+}
+<style>
+    .event-banner-container {
+        width: 100%;
+        height: 350px;
+        overflow: hidden;
+        border-radius: 12px;
+        background-color: #f1f1f1;
+    }
+
+    .event-banner {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+        display: block;
+    }
+</style>
+
+<div class="container mt-4">
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+    <h2>Event Details</h2>
+
+    <p>Welcome, @ViewBag.FirstName!</p>
+
+    <div class="card shadow p-4 mt-3">
+
+        <h3>@Model.Name</h3>
+        @if (!string.IsNullOrWhiteSpace(Model.BannerImageUrl))
+        {
+            <div class="event-banner-container mb-4">
+                <img src="https://localhost:7246/@Model.BannerImageUrl"
+                     alt="@Model.Name banner"
+                     class="event-banner" />
+            </div>
+        }
+        <hr />
+
+        <p>
+            <strong>Description:</strong>
+            @(string.IsNullOrWhiteSpace(Model.Description)
+                        ? "No description available."
+                        : Model.Description)
+        </p>
+
+        <p>
+            <strong>Date:</strong>
+            @Model.EventDate.ToString("dd MMMM yyyy")
+        </p>
+
+        <p>
+            <strong>Time:</strong>
+            @Model.EventTime
+        </p>
+
+        <p>
+            <strong>Location:</strong>
+            @Model.Location
+        </p>
+
+        <p>
+            <strong>Entry Fee:</strong>
+            R @Model.EntryFee.ToString("N2")
+        </p>
+
+        <p>
+            <strong>Maximum Participants:</strong>
+            @Model.MaxParticipants
+        </p>
+
+        <p>
+            <strong>Status:</strong>
+            @Model.Status
+        </p>
+
+        <hr />
+
+        <div class="mt-3">
+
+            <form asp-controller="Participant"
+                  asp-action="Register"
+                  method="post">
+
+                <input type="hidden" name="eventID" value="@Model.EventID" />
+
+                <button type="submit" class="btn btn-success">
+                    Register for Event
+                </button>
+
+            </form>
+
+            <a asp-controller="Participant"
+               asp-action="Dashboard"
+               class="btn btn-secondary mt-2">
+                Back to Dashboard
+            </a>
+
+        </div>
+
+    </div>
+
+</div>

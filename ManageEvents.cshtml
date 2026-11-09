@@ -1,0 +1,123 @@
+﻿@model List<RaceDayMVC.Models.ViewModels.EventViewModel>
+
+@{
+    ViewData["Title"] = "Manage Events";
+}
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["Success"]
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["Error"]
+    </div>
+}
+
+<div class="container mt-5">
+
+    <h2>Manage Events</h2>
+    <a asp-controller="Organiser"
+       asp-action="CreateEvent"
+       class="btn btn-success mb-4">
+        Create New Event
+    </a>
+
+    <p>View and manage your running events.</p>
+
+    <hr />
+
+    @if (ViewBag.Error != null)
+    {
+        <div class="alert alert-danger">
+            @ViewBag.Error
+        </div>
+    }
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="row">
+
+            @foreach (var raceEvent in Model)
+            {
+                <div class="col-md-6 mb-4">
+
+                    <div class="card shadow h-100">
+
+                        <div class="card-body">
+
+                            <span class="badge bg-success">
+                                @raceEvent.Status
+                            </span>
+
+                            <h5 class="card-title mt-3">
+                                @raceEvent.Name
+                            </h5>
+
+                            <p>
+                                <strong>Event ID:</strong>
+                                @raceEvent.EventID
+                            </p>
+
+                            <p>
+                                <strong>Date:</strong>
+                                @raceEvent.EventDate.ToString("dd MMMM yyyy")
+                            </p>
+
+                            <p>
+                                <strong>Time:</strong>
+                                @raceEvent.EventTime
+                            </p>
+
+                            <p>
+                                <strong>Location:</strong>
+                                @raceEvent.Location
+                            </p>
+
+                            <p>
+                                <strong>Entry Fee:</strong>
+                                R @raceEvent.EntryFee.ToString("0.00")
+                            </p>
+
+                            <p>
+                                <strong>Maximum Participants:</strong>
+                                @raceEvent.MaxParticipants
+                            </p>
+                            <a asp-controller="Organiser"
+                               asp-action="EditEvent"
+                               asp-route-id="@raceEvent.EventID"
+                               class="btn btn-warning">
+                                Edit Event
+                            </a>
+                            <a asp-controller="Organiser"
+                               asp-action="DeleteEvent"
+                               asp-route-id="@raceEvent.EventID"
+                               class="btn btn-danger">
+                                Delete Event
+                            </a>
+                        </div>
+
+                    </div>
+
+                </div>
+            }
+
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            You currently have no events assigned to your account.
+        </div>
+    }
+
+    <a asp-controller="Organiser"
+       asp-action="Dashboard"
+       class="btn btn-secondary mt-3">
+        Back to Dashboard
+    </a>
+
+</div>

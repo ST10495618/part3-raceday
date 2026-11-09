@@ -1,0 +1,99 @@
+﻿@model List<RaceDayMVC.Models.ViewModels.RegistrationViewModel>
+
+@{
+    ViewData["Title"] = "My Registrations";
+}
+
+<div class="container mt-5">
+
+    <h2>My Registrations</h2>
+
+    <p>Welcome, @ViewBag.FirstName!</p>
+
+    <p>Here you can view all the events you have registered for.</p>
+
+    <hr />
+
+    @if (ViewBag.Error != null)
+    {
+        <div class="alert alert-danger">
+            @ViewBag.Error
+        </div>
+    }
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="row">
+
+            @foreach (var registration in Model)
+            {
+                <div class="col-md-6 mb-4">
+
+                    <div class="card shadow h-100">
+
+                        <div class="card-body">
+
+                            <h5 class="card-title">
+                                @(registration.EventDetails?.Name
+                                                        ?? "Event information unavailable")
+                    </h5>
+
+                            <p>
+                                <strong>Event Date:</strong>
+
+                        @if (registration.EventDetails != null)
+                                {
+                                    @registration.EventDetails.EventDate.ToString("dd MMMM yyyy")
+                                }
+                                else
+                                {
+                                    <span>Not available</span>
+                                }
+                            </p>
+
+                            <p>
+                                <strong>Time:</strong>
+                                @(registration.EventDetails?.EventTime ?? "Not available")
+                            </p>
+
+                            <p>
+                                <strong>Location:</strong>
+                                @(registration.EventDetails?.Location ?? "Not available")
+                            </p>
+
+                            <p>
+                                <strong>Registration Date:</strong>
+                                @registration.RegistrationDate.ToString("dd MMMM yyyy")
+                            </p>
+
+                            <p>
+                                <strong>Registration Status:</strong>
+
+                                <span class="badge bg-success">
+                                    @registration.Status
+                                </span>
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            }
+
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            You have not registered for any events yet.
+        </div>
+    }
+
+    <a asp-controller="Participant"
+       asp-action="Dashboard"
+       class="btn btn-secondary mt-3">
+        Back to Dashboard
+    </a>
+
+</div>
